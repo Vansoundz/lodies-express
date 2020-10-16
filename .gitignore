@@ -1,0 +1,8 @@
+/node_modules/
+
+# environment
+.env
+
+# files
+
+/files/
