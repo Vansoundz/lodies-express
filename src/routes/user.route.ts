@@ -5,12 +5,13 @@ import { mkdirSync } from "fs";
 import multer from "multer";
 import User from "../models/user.model";
 import {
+  changeAccountType,
   getUser,
   login,
   register,
   updateProfile,
 } from "../controllers/user.controller";
-import authMiddleware from "../middleware/auth.middleware";
+import auth from "../middleware/auth.middleware";
 
 const router = Router();
 
@@ -49,7 +50,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 // const singleUpload = upload.single("image");
 
-router.get(`/`, authMiddleware, getUser);
+router.get(`/`, auth, getUser);
 
 router.post(
   `/register`,
@@ -67,10 +68,8 @@ router.post(
 
 router.post(`/login`, login);
 
-router.patch(
-  `/profile`,
-  [authMiddleware, upload.single("image")],
-  updateProfile
-);
+router.patch(`/profile`, [auth, upload.single("image")], updateProfile);
+
+router.patch(`/account-type`, auth, changeAccountType);
 
 export default router;

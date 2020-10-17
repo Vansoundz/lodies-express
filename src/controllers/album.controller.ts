@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { Types } from "mongoose";
 import Album from "../models/album.model";
+import User from "../models/user.model";
 
 const getAlbums = async (req: Request, res: Response) => {
   try {
@@ -46,6 +47,22 @@ const createalbum = async (req: Request, res: Response) => {
   // @ts-ignore
   const userId = req.userId;
   try {
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
+    }
+
+    // @ts-ignore
+    if (user.accountType !== "artist") {
+      return res
+        .status(401)
+        .json({
+          errors: [
+            { msg: "Only artists can create albums", param: "accountType" },
+          ],
+        });
+    }
+
     const { tracks, title } = req.body;
     let album = new Album({ tracks, title });
 
@@ -74,6 +91,13 @@ const changeVisibility = async (req: Request, res: Response) => {
 
     if (!album) {
       return res.status(404).json({ errors: [{ msg: "Album not found" }] });
+    }
+
+    //   @ts-ignore
+    const userId = req.userId;
+    //   @ts-ignore
+    if (!album.artist.equals(userId)) {
+      return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
     }
 
     //   @ts-ignore

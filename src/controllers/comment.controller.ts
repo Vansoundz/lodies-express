@@ -78,6 +78,8 @@ const updateComment = async (req: Request, res: Response) => {
 
 const hideShowComment = async (req: Request, res: Response) => {
   const id = req.params.id;
+  // @ts-ignore
+  let userId = req.userId;
   try {
     let comment = await Comment.findById(id);
 
@@ -85,6 +87,11 @@ const hideShowComment = async (req: Request, res: Response) => {
       return res.status(404).json({
         errors: [{ msg: "Comment not found" }],
       });
+    }
+
+    // @ts-ignore
+    if (!comment.user.equals(userId)) {
+      return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
     }
 
     //   @ts-ignore
@@ -103,6 +110,7 @@ const hideShowComment = async (req: Request, res: Response) => {
 
 const deleteComment = async (req: Request, res: Response) => {
   const id = req.params.id;
+
   try {
     const comment = await Comment.findByIdAndDelete(id);
 

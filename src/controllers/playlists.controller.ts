@@ -69,11 +69,19 @@ const createplaylist = async (req: Request, res: Response) => {
 
 const changeVisibility = async (req: Request, res: Response) => {
   let id = req.params.id;
+  // @ts-ignore
+  let userId = req.userId;
+
   try {
     let playlist = await Playlist.findById(id);
 
     if (!playlist) {
       return res.status(404).json({ errors: [{ msg: "Playlist not found" }] });
+    }
+
+    // @ts-ignore
+    if (!playlist.artist.equals(userId)) {
+      return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
     }
 
     //   @ts-ignore
@@ -92,12 +100,19 @@ const changeVisibility = async (req: Request, res: Response) => {
 
 const addTrackToPlaylist = async (req: Request, res: Response) => {
   let id = req.params.id;
+  // @ts-ignore
+  let userId = req.userId;
   try {
     const { track } = req.body;
     let playlist = await Playlist.findById(id);
 
     if (!playlist) {
       return res.status(404).json({ errors: [{ msg: "Playlist not found" }] });
+    }
+
+    // @ts-ignore
+    if (!playlist.artist.equals(userId)) {
+      return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
     }
 
     //   @ts-ignore
@@ -129,11 +144,18 @@ const addTrackToPlaylist = async (req: Request, res: Response) => {
 
 const deletePlaylist = async (req: Request, res: Response) => {
   let id = req.params.id;
+  // @ts-ignore
+  let userId = req.userId;
   try {
     let playlist = await Playlist.findByIdAndDelete(id);
 
     if (!playlist) {
       return res.status(404).json({ errors: [{ msg: "Playlist not found" }] });
+    }
+
+    // @ts-ignore
+    if (!playlist.artist.equals(userId)) {
+      return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
     }
 
     res.json({ playlist });

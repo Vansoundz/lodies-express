@@ -11,6 +11,9 @@ import {
   changeVisibility,
   createTrack,
   deleteTrack,
+  getBeats,
+  getMixes,
+  getPodcasts,
   getTrack,
   getTracks,
   likeTrack,
@@ -72,6 +75,9 @@ router.post(
   createTrack
 );
 router.get(`/`, getTracks);
+router.get(`/beats`, getBeats);
+router.get(`/mixes`, getMixes);
+router.get(`/podcasts`, getPodcasts);
 router.get(`/:id`, getTrack);
 router.patch(`/:id/play`, setUserId, updatePlays);
 router.delete(`/:id`, auth, deleteTrack);

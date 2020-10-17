@@ -17,10 +17,18 @@ const createTrack = async (req: Request, res: Response) => {
     let user = await User.findById(userId);
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ errors: [{ msg: "User does not exist", param: "email" }] });
+      return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
     }
+
+    // @ts-ignore
+    if (user.accountType !== "artist") {
+      return res.status(401).json({
+        errors: [
+          { msg: "Only artists can create songs", param: "accountType" },
+        ],
+      });
+    }
+
     let track = new Track({ ...req.body });
 
     // @ts-ignore
@@ -46,8 +54,38 @@ const createTrack = async (req: Request, res: Response) => {
 
 const getTracks = async (req: Request, res: Response) => {
   try {
-    let tracks = await Track.find({ visible: true });
+    let tracks = await Track.find({ visible: true, type: "track" });
     res.json({ tracks });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ errors: [{ msg: "server error" }] });
+  }
+};
+
+const getBeats = async (req: Request, res: Response) => {
+  try {
+    let beats = await Track.find({ visible: true, type: "beat" });
+    res.json({ beats });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ errors: [{ msg: "server error" }] });
+  }
+};
+
+const getMixes = async (req: Request, res: Response) => {
+  try {
+    let mixes = await Track.find({ visible: true, type: "mix" });
+    res.json({ mixes });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ errors: [{ msg: "server error" }] });
+  }
+};
+
+const getPodcasts = async (req: Request, res: Response) => {
+  try {
+    let podcasts = await Track.find({ visible: true, type: "podcast" });
+    res.json({ podcasts });
   } catch (error) {
     console.log(error);
     res.status(500).json({ errors: [{ msg: "server error" }] });
@@ -112,7 +150,6 @@ const changeVisibility = async (req: Request, res: Response) => {
   let userId = req.userId;
   try {
     let id = req.params.id;
-
     let track = await Track.findById(id);
 
     if (!track) {
@@ -120,7 +157,7 @@ const changeVisibility = async (req: Request, res: Response) => {
     }
 
     // @ts-ignore
-    if (track.artist.toString() !== userId.toString()) {
+    if (!track.artist.equals(userId)) {
       return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
     }
 
@@ -138,6 +175,8 @@ const changeVisibility = async (req: Request, res: Response) => {
 
 const deleteTrack = async (req: Request, res: Response) => {
   const id = req.params.id;
+  // @ts-ignore
+  let userId = req.userId;
   try {
     const track = await Track.findByIdAndDelete(id);
 
@@ -147,6 +186,11 @@ const deleteTrack = async (req: Request, res: Response) => {
       return res.status(404).json({
         errors: [{ msg: "track not found" }],
       });
+    }
+
+    // @ts-ignore
+    if (!track.artist.equals(userId)) {
+      return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
     }
 
     // @ts-ignore
@@ -269,4 +313,7 @@ export {
   changeVisibility,
   deleteTrack,
   updatePlays,
+  getBeats,
+  getMixes,
+  getPodcasts,
 };

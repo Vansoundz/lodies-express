@@ -133,4 +133,32 @@ const updateProfile = async (req: Request, res: Response) => {
   }
 };
 
-export { register, login, getUser, updateProfile };
+const changeAccountType = async (req: Request, res: Response) => {
+  // @ts-ignore
+  let userId = req.userId;
+  try {
+    let user = await User.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ errors: [{ msg: "Account not found", param: "profile" }] });
+    }
+    // @ts-ignore
+
+    if (user.accountType === "fan") {
+      // @ts-ignore
+      user.accountType = "artist";
+    } // @ts-ignore
+    else user.accountType = "fan";
+
+    await user.save();
+
+    res.json({ user });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ errors: [{ msg: "Server error" }] });
+  }
+};
+
+export { register, login, getUser, updateProfile, changeAccountType };
