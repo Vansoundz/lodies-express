@@ -20,4 +20,4 @@ const CommentSchema = new Schema({
   },
 });
 
-export default model("comment", CommentSchema);
+export default model("lyric", CommentSchema);
