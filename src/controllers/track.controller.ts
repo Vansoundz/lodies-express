@@ -4,6 +4,15 @@ import { Types } from "mongoose";
 import Track from "../models/track.model";
 import Comment from "../models/comment.model";
 import User from "../models/user.model";
+import { S3 } from "aws-sdk";
+import { config } from "dotenv";
+
+config();
+
+var s3 = new S3({
+  accessKeyId: process.env.AWSAccessKeyId,
+  secretAccessKey: process.env.AWSSecretKey,
+});
 
 const createTrack = async (req: Request, res: Response) => {
   const result = validationResult(req);
@@ -35,10 +44,12 @@ const createTrack = async (req: Request, res: Response) => {
     track.artist = userId;
 
     // @ts-ignore
-    track.cover = req.files.cover[0].filename;
+    track.cover = req.files.cover[0].location; // @ts-ignore
+    track.coverKey = req.files.cover[0].key;
 
     // @ts-ignore
-    track.source = req.files.track[0].filename;
+    track.source = req.files.track[0].location; // @ts-ignore
+    track.sourceKey = req.files.track[0].key;
     // @ts-ignore
     user.tracks = [...user.tracks, track.id];
 
@@ -180,8 +191,6 @@ const deleteTrack = async (req: Request, res: Response) => {
   try {
     const track = await Track.findByIdAndDelete(id);
 
-    // TODO delete images from server
-
     if (!track) {
       return res.status(404).json({
         errors: [{ msg: "track not found" }],
@@ -203,6 +212,25 @@ const deleteTrack = async (req: Request, res: Response) => {
       );
       await user.save();
     }
+
+    // Delete files from s3 bucket
+
+    // @ts-ignore
+    await s3
+      .deleteObject({
+        Bucket: process.env.Bucket,
+        // @ts-ignore
+        Key: track.coverKey,
+      })
+      .promise();
+    // @ts-ignore
+    await s3
+      .deleteObject({
+        Bucket: process.env.Bucket,
+        // @ts-ignore
+        Key: track.sourceKey,
+      })
+      .promise();
 
     await Comment.deleteMany({ track: track.id });
 

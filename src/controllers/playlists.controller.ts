@@ -154,7 +154,7 @@ const deletePlaylist = async (req: Request, res: Response) => {
     }
 
     // @ts-ignore
-    if (!playlist.artist.equals(userId)) {
+    if (!playlist.user.equals(userId)) {
       return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
     }
 

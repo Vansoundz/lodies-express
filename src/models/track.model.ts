@@ -31,6 +31,8 @@ const TrackSchema = new Schema({
   cover: {
     type: String,
   },
+  coverKey: { type: String },
+  sourceKey: { type: String },
   source: {
     type: String,
   },

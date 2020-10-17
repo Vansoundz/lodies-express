@@ -3,6 +3,15 @@ import { validationResult } from "express-validator";
 import { Types } from "mongoose";
 import Album from "../models/album.model";
 import User from "../models/user.model";
+import { config } from "dotenv";
+import { S3 } from "aws-sdk";
+
+config();
+
+var s3 = new S3({
+  accessKeyId: process.env.AWSAccessKeyId,
+  secretAccessKey: process.env.AWSSecretKey,
+});
 
 const getAlbums = async (req: Request, res: Response) => {
   try {
@@ -54,13 +63,11 @@ const createalbum = async (req: Request, res: Response) => {
 
     // @ts-ignore
     if (user.accountType !== "artist") {
-      return res
-        .status(401)
-        .json({
-          errors: [
-            { msg: "Only artists can create albums", param: "accountType" },
-          ],
-        });
+      return res.status(401).json({
+        errors: [
+          { msg: "Only artists can create albums", param: "accountType" },
+        ],
+      });
     }
 
     const { tracks, title } = req.body;
@@ -68,7 +75,8 @@ const createalbum = async (req: Request, res: Response) => {
 
     if (req.file) {
       // @ts-ignore
-      album.cover = req.file.filename;
+      album.cover = req.files.cover[0].location; // @ts-ignore
+      album.coverKey = req.files.cover[0].key;
     }
 
     // @ts-ignore
@@ -172,6 +180,18 @@ const deleteAlbum = async (req: Request, res: Response) => {
     //   @ts-ignore
     if (!album.artist.equals(userId)) {
       return res.status(401).json({ errors: [{ msg: "Unauthorized action" }] });
+    }
+
+    // @ts-ignore
+    if (album.coverKey) {
+      // @ts-ignore
+      await s3
+        .deleteObject({
+          Bucket: process.env.Bucket,
+          // @ts-ignore
+          Key: album.coverKey,
+        })
+        .promise();
     }
 
     res.json({ album });

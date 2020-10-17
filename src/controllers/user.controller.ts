@@ -116,7 +116,9 @@ const updateProfile = async (req: Request, res: Response) => {
 
     if (req.file) {
       // @ts-ignore
-      user.image = req.file.filename;
+      user.image = req.file.location;
+      // @ts-ignore
+      user.imageKey = req.file.key;
     }
 
     Object.keys(body).forEach((key) => {

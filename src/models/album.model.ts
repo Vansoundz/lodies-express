@@ -12,6 +12,9 @@ const AlbumSchema = new Schema({
   cover: {
     type: String,
   },
+  coverKey: {
+    type: String,
+  },
   visible: {
     type: Boolean,
     default: true,

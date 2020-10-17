@@ -1,5 +1,6 @@
+import { S3 } from "aws-sdk";
 import { Router } from "express";
-import { mkdirSync } from "fs";
+import { config } from "dotenv";
 import multer from "multer";
 import {
   createComment,
@@ -20,48 +21,64 @@ import {
   updatePlays,
 } from "../controllers/track.controller";
 import auth, { setUserId } from "../middleware/auth.middleware";
+import multerS3 from "multer-s3";
 
 const router = Router();
 
-// var s3 = new S3({
-//   accessKeyId: process.env.AWSAccessKeyId,
-//   secretAccessKey: process.env.AWSSecretKey,
-// });
+config();
 
-// var upload = multer({
-//   storage: multerS3({
-//     s3: s3,
-//     bucket: "moonre",
-//     metadata: function (req, file, cb) {
-//       cb(null, { fieldName: file.fieldname });
-//     },
-//     key: function (req, file, cb) {
-//       cb(null, `${Date.now()}${file.originalname}`);
-//     },
-//   }),
-// });
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    let path = `./src/files`;
-    const mimetype = file.mimetype;
-    if (mimetype.includes(`audio`)) {
-      path = `${path}/audio/`;
-    }
-    if (mimetype.includes(`image`)) {
-      path = `${path}/images/`;
-    }
-    // @ts-ignore
-
-    mkdirSync(path, { recursive: true });
-    cb(null, path);
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}${file.originalname}`);
-  },
+var s3 = new S3({
+  accessKeyId: process.env.AWSAccessKeyId,
+  secretAccessKey: process.env.AWSSecretKey,
 });
 
-const upload = multer({ storage: storage });
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    // @ts-ignore
+    bucket: process.env.Bucket,
+    metadata: function (req, file, cb) {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: function (req, file, cb) {
+      // @ts-ignore
+      let userId = req.userId || "unknown";
+
+      const mimetype = file.mimetype;
+      let folder = "misc";
+
+      if (mimetype.includes("audio")) {
+        folder = `audio/${userId}`;
+      }
+      if (mimetype.includes("image")) {
+        folder = `covers/${userId}`;
+      }
+      cb(null, `${folder}/${Date.now()}${file.originalname}`);
+    },
+  }),
+});
+
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     let path = `./src/files`;
+//     const mimetype = file.mimetype;
+//     if (mimetype.includes(`audio`)) {
+//       path = `${path}/audio/`;
+//     }
+//     if (mimetype.includes(`image`)) {
+//       path = `${path}/images/`;
+//     }
+//     // @ts-ignore
+
+//     mkdirSync(path, { recursive: true });
+//     cb(null, path);
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, `${Date.now()}${file.originalname}`);
+//   },
+// });
+
+// const upload = multer({ storage: storage });
 
 router.post(
   `/`,
