@@ -1,8 +1,11 @@
 {
   "name": "lodies",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/app.js",
   "license": "MIT",
+  "engines": {
+    "node": "13.x"
+  },
   "scripts": {
     "dev": "nodemon src/app.ts",
     "start": "node dist/app.js",
