@@ -2,13 +2,21 @@ import { Router } from "express";
 import { mkdirSync } from "fs";
 import multer from "multer";
 import {
+  createComment,
+  deleteComment,
+  hideShowComment,
+  updateComment,
+} from "../controllers/comment.controller";
+import {
   changeVisibility,
   createTrack,
+  deleteTrack,
   getTrack,
   getTracks,
   likeTrack,
+  updatePlays,
 } from "../controllers/track.controller";
-import authMiddleware from "../middleware/auth.middleware";
+import auth, { setUserId } from "../middleware/auth.middleware";
 
 const router = Router();
 
@@ -55,7 +63,7 @@ const upload = multer({ storage: storage });
 router.post(
   `/`,
   [
-    authMiddleware,
+    auth,
     upload.fields([
       { name: "cover", maxCount: 1 },
       { name: "track", maxCount: 1 },
@@ -65,7 +73,13 @@ router.post(
 );
 router.get(`/`, getTracks);
 router.get(`/:id`, getTrack);
-router.patch(`/:id/like`, authMiddleware, likeTrack);
-router.patch(`/:id/visibility`, authMiddleware, changeVisibility);
+router.patch(`/:id/play`, setUserId, updatePlays);
+router.delete(`/:id`, auth, deleteTrack);
+router.patch(`/:id/like`, auth, likeTrack);
+router.patch(`/:id/visibility`, auth, changeVisibility);
+router.patch(`/:id/comment`, auth, createComment);
+router.patch(`/comments/:id`, auth, updateComment);
+router.delete(`/comments/:id`, auth, deleteComment);
+router.patch(`/comments/:id/hide-show`, auth, hideShowComment);
 
 export default router;

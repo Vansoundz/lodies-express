@@ -46,8 +46,8 @@ const TrackSchema = new Schema({
   ],
   plays: [
     {
-      user: { type: Types.ObjectId, ref: "user" },
-      device: { type: String },
+      userId: { type: Types.ObjectId, ref: "user" },
+      deviceId: { type: String },
     },
   ],
 });

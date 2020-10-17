@@ -31,3 +31,22 @@ export default (req: Request, res: Response, next: NextFunction) => {
     });
   }
 };
+
+export const setUserId = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    let token = req.headers.authorization;
+
+    if (token) {
+      // @ts-ignore
+      let decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // @ts-ignore
+      if (decoded.userId)
+        // @ts-ignore
+        req.userId = decoded.userId;
+    }
+
+    next();
+  } catch (error) {
+    next();
+  }
+};

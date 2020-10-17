@@ -40,4 +40,4 @@ const AlbumSchema = new Schema({
   ],
 });
 
-export default model("album", AlbumSchema);
+export default model("playlist", AlbumSchema);

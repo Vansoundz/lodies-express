@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { Types } from "mongoose";
 import Track from "../models/track.model";
+import Comment from "../models/comment.model";
 import User from "../models/user.model";
 
 const createTrack = async (req: Request, res: Response) => {
@@ -45,7 +46,7 @@ const createTrack = async (req: Request, res: Response) => {
 
 const getTracks = async (req: Request, res: Response) => {
   try {
-    let tracks = await Track.find({});
+    let tracks = await Track.find({ visible: true });
     res.json({ tracks });
   } catch (error) {
     console.log(error);
@@ -60,6 +61,11 @@ const getTrack = async (req: Request, res: Response) => {
     const track = await Track.findById(id);
 
     if (!track) {
+      res.status(404).json({ errors: [{ msg: "Track not found" }] });
+    }
+
+    // @ts-ignore
+    if (!track.visible) {
       res.status(404).json({ errors: [{ msg: "Track not found" }] });
     }
 
@@ -130,4 +136,137 @@ const changeVisibility = async (req: Request, res: Response) => {
   }
 };
 
-export { createTrack, getTracks, getTrack, likeTrack, changeVisibility };
+const deleteTrack = async (req: Request, res: Response) => {
+  const id = req.params.id;
+  try {
+    const track = await Track.findByIdAndDelete(id);
+
+    // TODO delete images from server
+
+    if (!track) {
+      return res.status(404).json({
+        errors: [{ msg: "track not found" }],
+      });
+    }
+
+    // @ts-ignore
+    let user = await User.findById(track.artist);
+
+    if (user) {
+      // @ts-ignore
+      user.tracks = user.tracks.filter(
+        (t: Types.ObjectId) => !track.equals(track.id)
+      );
+      await user.save();
+    }
+
+    await Comment.deleteMany({ track: track.id });
+
+    res.json({ track });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      errors: [{ msg: "Server error" }],
+    });
+  }
+};
+
+const updatePlays = async (req: Request, res: Response) => {
+  let id = req.params.id;
+
+  // @ts-ignore
+  const userId = req.userId;
+
+  interface IPlay {
+    userId?: Types.ObjectId;
+    deviceId?: String;
+  }
+
+  try {
+    const { deviceId } = req.body;
+
+    console.log(deviceId, userId);
+
+    let track = await Track.findById(id);
+
+    if (!track) {
+      return res.status(404).json({
+        errors: [
+          {
+            msg: "Track not found",
+          },
+        ],
+      });
+    }
+
+    let play: IPlay | undefined;
+
+    if (userId) {
+      // @ts-ignore
+      play = track.plays.find((l: IPlay) => l.userId === userId);
+    }
+
+    /* @TODO fix play bug */
+
+    // update device id
+    if (play) {
+      play.deviceId !== deviceId;
+      // @ts-ignore
+      track.plays = track.plays.map((p: IPlay) => {
+        if (p.userId?.equals(userId)) {
+          p.deviceId = deviceId;
+        }
+        return p;
+      });
+    }
+
+    if (!play) {
+      // @ts-ignore
+      play = track.plays.find((l: IPlay) => l.deviceId === deviceId);
+    }
+
+    // Update play if userId exists
+    if (play) {
+      // @ts-ignore
+      if (!play.userId && userId && !play?.userId?.equals(userId)) {
+        // @ts-ignore
+        track.plays = track.plays.map((p: IPlay) => {
+          if (p.deviceId === deviceId) {
+            p.userId = userId;
+          }
+          return p;
+        });
+      }
+    }
+
+    // Create play if it doesnt exist
+    if (!play) {
+      if (userId) {
+        play = { userId, deviceId };
+      } else {
+        play = { deviceId };
+      }
+
+      // @ts-ignore
+      track.plays = [...track.plays, play];
+    }
+
+    await track?.save();
+    res.json({ track });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      errors: [{ msg: "Server error" }],
+    });
+  }
+};
+
+export {
+  createTrack,
+  getTracks,
+  getTrack,
+  likeTrack,
+  changeVisibility,
+  deleteTrack,
+  updatePlays,
+};

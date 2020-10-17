@@ -3,6 +3,8 @@ import express from "express";
 import { connect, connection } from "mongoose";
 import users from "./routes/user.route";
 import tracks from "./routes/track.route";
+import playlists from "./routes/playlist.route";
+import albums from "./routes/album.route";
 
 config();
 
@@ -30,6 +32,8 @@ app.get("/", (req, res) => {
 app.use(express.static("src/files"));
 app.use(`/users`, users);
 app.use(`/tracks`, tracks);
+app.use(`/playlists`, playlists);
+app.use(`/albums`, albums);
 
 var server = app.listen(PORT, () => {
   console.log(`Server running on port: ${PORT}`);
