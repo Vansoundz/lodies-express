@@ -7,6 +7,7 @@ import {
   changeAccountType,
   getUser,
   login,
+  logout,
   register,
   updateProfile,
 } from "../controllers/user.controller";
@@ -71,6 +72,7 @@ router.post(
 );
 
 router.post(`/login`, login);
+router.get(`/logout`, auth, logout);
 
 router.patch(`/profile`, [auth, upload.single("image")], updateProfile);
 

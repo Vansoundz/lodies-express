@@ -65,7 +65,10 @@ const createTrack = async (req: Request, res: Response) => {
 
 const getTracks = async (req: Request, res: Response) => {
   try {
-    let tracks = await Track.find({ visible: true, type: "track" });
+    let tracks = await Track.find({
+      visible: true,
+      type: "track",
+    }).populate("artist", ["username", "image"]);
     res.json({ tracks });
   } catch (error) {
     console.log(error);

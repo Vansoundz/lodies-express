@@ -7,6 +7,8 @@ import { config } from "dotenv";
 
 config();
 
+const maxAge = 3 * 24 * 60 * 60;
+
 const getUser = async (req: Request, res: Response) => {
   // @ts-ignore
   let id = req.userId;
@@ -57,7 +59,12 @@ const register = async (req: Request, res: Response) => {
     let token = jwt.sign({ userId: user?.id }, process.env.JWT_SECRET, {
       expiresIn: `48h`,
     });
-    res.json({ user, token });
+
+    res.cookie("__lodies", token, {
+      httpOnly: process.env.NODE_ENV === "production" ? true : false,
+      maxAge: maxAge * 1000,
+    });
+    res.json({ user });
   } catch (error) {
     console.log(error);
     res.status(500).json({ errors: [{ msg: "Server error" }] });
@@ -94,7 +101,11 @@ const login = async (req: Request, res: Response) => {
     let token = jwt.sign({ userId: user?.id }, process.env.JWT_SECRET, {
       expiresIn: `48h`,
     });
-    res.json({ user, token });
+    res.cookie("__lodies", token, {
+      httpOnly: process.env.NODE_ENV === "production" ? true : false,
+      maxAge: maxAge * 1000,
+    });
+    res.json({ user });
   } catch (error) {
     console.log(error);
     res.status(500).json({ errors: [{ msg: "Server error" }] });
@@ -163,4 +174,13 @@ const changeAccountType = async (req: Request, res: Response) => {
   }
 };
 
-export { register, login, getUser, updateProfile, changeAccountType };
+const logout = async (req: Request, res: Response) => {
+  try {
+    res.cookie(`__lodies`, "", { maxAge: 1 });
+    res.send();
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ errors: [{ msg: "Server error" }] });
+  }
+};
+export { register, login, getUser, updateProfile, changeAccountType, logout };

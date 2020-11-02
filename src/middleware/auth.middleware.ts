@@ -6,7 +6,8 @@ config();
 
 export default (req: Request, res: Response, next: NextFunction) => {
   try {
-    let token = req.headers.authorization;
+    let token = req.cookies.__lodies;
+    // let token = req.headers.authorization;
 
     if (!token)
       return res.status(401).send({
@@ -34,7 +35,8 @@ export default (req: Request, res: Response, next: NextFunction) => {
 
 export const setUserId = (req: Request, res: Response, next: NextFunction) => {
   try {
-    let token = req.headers.authorization;
+    // let token = req.headers.authorization;
+    let token = req.cookies.__lodies;
 
     if (token) {
       // @ts-ignore

@@ -4,5 +4,7 @@
 .env
 
 # files
-
 src/files/*
+
+# production
+/dist/

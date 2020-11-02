@@ -5,6 +5,7 @@ import users from "./routes/user.route";
 import tracks from "./routes/track.route";
 import playlists from "./routes/playlist.route";
 import albums from "./routes/album.route";
+import cookieParser from "cookie-parser";
 
 config();
 
@@ -14,6 +15,7 @@ const mongoURI: string = process.env.MONGO_URI as string;
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser(process.env.JWT_SECRET));
 
 // async () => {
 //   try {
@@ -30,14 +32,15 @@ app.get("/", (req, res) => {
 });
 
 app.use(express.static("src/files"));
-app.use(`/users`, users);
-app.use(`/tracks`, tracks);
-app.use(`/playlists`, playlists);
-app.use(`/albums`, albums);
+app.use(`/api/users`, users);
+app.use(`/api/tracks`, tracks);
+app.use(`/api/playlists`, playlists);
+app.use(`/api/albums`, albums);
 
 var server = app.listen(PORT, () => {
   console.log(`Server running on port: ${PORT}`);
 });
+
 //   } catch (error) {
 //     console.log("Error", error);
 //   }
